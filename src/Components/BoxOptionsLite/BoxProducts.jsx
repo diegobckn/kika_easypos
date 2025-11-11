@@ -44,7 +44,7 @@ import ProductCodeStack from "../../Models/ProductCodeStack";
 import Balanza from "../../Models/Balanza";
 import BalanzaUnidad from "../../Models/BalanzaUnidad";
 import dayjs from "dayjs";
-import { OrdenListado } from "../../definitions/BaseConfig";
+import OrdenListado from "../../definitions/OrdenesListado";
 
 const BoxProducts = ({ }) => {
   const {
@@ -81,6 +81,13 @@ const BoxProducts = ({ }) => {
 
   const [products, setProducts] = useState([]);
   const [cargado, setCargado] = useState(null);
+
+  const [paginaBusqueda, setPaginaBusqueda] = useState(0);
+  const [cantidadPaginasBusqueda, setCantidadPaginasBusqueda] = useState(0);
+
+  const focusSearchInput = () => {
+    System.intentarFoco(searchInputRef)
+  }
 
   useEffect(() => {
     if (textSearchProducts.trim() == "") {
@@ -142,11 +149,7 @@ const BoxProducts = ({ }) => {
                 // setProductByCodigo(productoEncontrado);
               } else {
                 showMessage("Producto No encontrado");
-                showConfirm("Producto No encontrado, desea agregar un nuevo producto con el codigo '" + parte + "' ?", () => {
-                  addNewProductFromCode(parte)
-                }, () => {
-
-                })
+                procesarNoEncontrado(parte)
               }
 
               hideLoading()
@@ -159,21 +162,14 @@ const BoxProducts = ({ }) => {
           } else {
             //codigo no coincide con codigo de balanza configurado
             showMessage("Producto No encontrado");
-            showConfirm("Producto No encontrado, desea agregar un nuevo producto con el codigo '" + parte + "' ?", () => {
-              addNewProductFromCode(parte)
-            }, () => {
-
-            })
+            procesarNoEncontrado(parte)
           }
 
 
         })
       } else {
         showMessage("Producto No encontrado");
-        showConfirm("Producto No encontrado, desea agregar un nuevo producto con el codigo ' " + codigoBusqueda + " ' ?", () => {
-          addNewProductFromCode(codigoBusqueda)
-        }, () => {
-        })
+        procesarNoEncontrado(codigoBusqueda)
       }
 
       hideLoading()
@@ -182,8 +178,14 @@ const BoxProducts = ({ }) => {
       return
     } else {
       showMessage("Producto No encontrado");
-      showConfirm("Producto No encontrado, desea agregar un nuevo producto con el codigo ' " + codigoBusqueda + " ' ?", () => {
-        addNewProductFromCode(codigoBusqueda)
+      procesarNoEncontrado(codigoBusqueda)
+    }
+  }
+
+  const procesarNoEncontrado = (codigoNoEncontrado) => {
+    if (ModelConfig.get("crearProductoNoEncontrado")) {
+      showConfirm("Producto No encontrado, desea agregar un nuevo producto con el codigo ' " + codigoNoEncontrado + " ' ?", () => {
+        addNewProductFromCode(codigoNoEncontrado)
       }, () => {
       })
     }
@@ -245,11 +247,7 @@ const BoxProducts = ({ }) => {
                 // setProductByCodigo(productoEncontrado);
               } else {
                 showMessage("Producto No encontrado");
-                showConfirm("Producto No encontrado, desea agregar un nuevo producto con el codigo '" + parte + "' ?", () => {
-                  addNewProductFromCode(parte)
-                }, () => {
-
-                })
+                procesarNoEncontrado(parte)
               }
 
               hideLoading()
@@ -269,10 +267,7 @@ const BoxProducts = ({ }) => {
         })
       } else {
         showMessage("Producto No encontrado");
-        showConfirm("Producto No encontrado, desea agregar un nuevo producto con el codigo ' " + codigoBusqueda + " ' ?", () => {
-          addNewProductFromCode(codigoBusqueda)
-        }, () => {
-        })
+        procesarNoEncontrado(codigoBusqueda)
       }
 
       hideLoading()
@@ -281,10 +276,7 @@ const BoxProducts = ({ }) => {
       return
     } else {
       showMessage("Producto No encontrado");
-      showConfirm("Producto No encontrado, desea agregar un nuevo producto con el codigo ' " + codigoBusqueda + " ' ?", () => {
-        addNewProductFromCode(codigoBusqueda)
-      }, () => {
-      })
+      procesarNoEncontrado(codigoBusqueda)
     }
   }
 
@@ -311,7 +303,7 @@ const BoxProducts = ({ }) => {
         // setProductByCodigo(productoEncontrado);
         // setTextSearchProducts("");
         setShowTecladoBuscar(false)
-        searchInputRef.current.focus()
+        focusSearchInput()
       } else {
 
         buscarValoresBalanza(codigoBusqueda)
@@ -338,7 +330,7 @@ const BoxProducts = ({ }) => {
 
 
 
-  const handleDescripcionSearchButtonClick = async () => {
+  const handleDescripcionSearchButtonClick = async (resetearPagina = true) => {
     if (parseInt(textSearchProducts.trim()) || 0) return //si es numero sale
     // console.log("handleDescripcionSearchButtonClick")
     // console.log("textSearchProducts")
@@ -514,21 +506,109 @@ const BoxProducts = ({ }) => {
         // console.log("el producto " + produ.nombre + ", #"+produ.idProducto + " tiene precio 0")
         // }
         // })
-
+        setCantidadPaginasBusqueda(Math.ceil(response.data.cantidadRegistros / 10))
         setProducts(products);
       } else {
         // console.log("Producto no encontrado.");
+        setCantidadPaginasBusqueda(0)
         setProducts([]);
         showMessage("Descripción o producto no encontrado");
       }
       setProducts(products)
+
+      if (resetearPagina) {
+        setPaginaBusqueda(1)
+      }
     },
       () => {
+        if (resetearPagina) {
+          setPaginaBusqueda(1)
+        }
+        setCantidadPaginasBusqueda(0)
         setProducts([])
       })
 
 
   };
+
+  const verProximaPagina = () => {
+    var codigoCliente = 0
+    if (cliente) codigoCliente = cliente.codigoCliente
+
+
+    Product.getInstance().findByDescriptionPaginado({
+      description: textSearchProducts,
+      codigoCliente: codigoCliente,
+      pagina: (paginaBusqueda + 1)
+    }, (products, response) => {
+      if (response.data.cantidadRegistros > 0) {
+
+        // products.forEach((produ)=>{
+        // if(parseFloat(produ.precioVenta) <=0){
+        // console.log("el producto " + produ.nombre + ", #"+produ.idProducto + " tiene precio 0")
+        // }
+        // })
+        setCantidadPaginasBusqueda(Math.ceil(response.data.cantidadRegistros / 10))
+        setProducts(products);
+      } else {
+        // console.log("Producto no encontrado.");
+        setCantidadPaginasBusqueda(0)
+        setProducts([]);
+        showMessage("Descripción o producto no encontrado");
+      }
+      setProducts(products)
+
+      setPaginaBusqueda(paginaBusqueda + 1)
+    },
+      () => {
+        setPaginaBusqueda(paginaBusqueda + 1)
+        setCantidadPaginasBusqueda(0)
+        setProducts([])
+      })
+  }
+
+  const verPaginaAnterior = () => {
+    var codigoCliente = 0
+    if (cliente) codigoCliente = cliente.codigoCliente
+
+    Product.getInstance().findByDescriptionPaginado({
+      description: textSearchProducts,
+      codigoCliente: codigoCliente,
+      pagina: (paginaBusqueda - 1)
+    }, (products, response) => {
+      if (response.data.cantidadRegistros > 0) {
+
+        // products.forEach((produ)=>{
+        // if(parseFloat(produ.precioVenta) <=0){
+        // console.log("el producto " + produ.nombre + ", #"+produ.idProducto + " tiene precio 0")
+        // }
+        // })
+        setCantidadPaginasBusqueda(Math.ceil(response.data.cantidadRegistros / 10))
+        setProducts(products);
+      } else {
+        // console.log("Producto no encontrado.");
+        setCantidadPaginasBusqueda(0)
+        setProducts([]);
+        showMessage("Descripción o producto no encontrado");
+      }
+      setProducts(products)
+
+      setPaginaBusqueda(paginaBusqueda - 1)
+    },
+      () => {
+        setPaginaBusqueda(paginaBusqueda - 1)
+        setCantidadPaginasBusqueda(0)
+        setProducts([])
+      })
+  }
+
+  useEffect(() => {
+    console.log("cambio paginaBusqueda", paginaBusqueda)
+  }, [paginaBusqueda])
+
+  useEffect(() => {
+    console.log("cambio cantidadPaginasBusqueda", cantidadPaginasBusqueda)
+  }, [cantidadPaginasBusqueda])
 
 
   useEffect(() => {
@@ -558,11 +638,15 @@ const BoxProducts = ({ }) => {
     setTextSearchProducts("")
     setShowTecladoBuscar(false)
 
-    searchInputRef.current.focus()
+    focusSearchInput()
   };
 
 
   const validateChangeSearchInput = (e) => {
+    if (textSearchProducts.length == 0) {
+      setPaginaBusqueda(0)
+      setCantidadPaginasBusqueda(0)
+    }
     if (Validator.isSearch(e.target.value)) {
       setTextSearchProducts(e.target.value)
     } else if (e.target.value.indexOf("@") > -1) {
@@ -641,6 +725,9 @@ const BoxProducts = ({ }) => {
             <div style={{ display: "flex" }}>
               <Grid item xs={12} md={12} lg={12} sx={{ margin: "1px" }}>
                 <TextField
+                  inputProps={{
+                    "data-id": "searchinput"
+                  }}
                   sx={{
                     backgroundColor: "white",
                     borderRadius: "5px",
@@ -707,6 +794,7 @@ const BoxProducts = ({ }) => {
             <Table sx={{ background: "white", height: "30%" }}>
               <TableBody style={{ maxHeight: "100px", overflowY: "auto" }}>
                 {textSearchProducts.trim() !== "" && products.length > 0 ? (
+
                   products.map((product, index) => (
                     <SearchProductItem
                       key={index}
@@ -717,6 +805,25 @@ const BoxProducts = ({ }) => {
                     />
                   ))
                 ) : null}
+
+                {textSearchProducts.trim() !== "" && products.length > 0 && cantidadPaginasBusqueda > 1 && (
+                  <TableRow sx={{ height: "15%" }}>
+                    <TableCell colSpan={10}>
+                      <SmallButton
+                        textButton={"Ver anterior"}
+                        actionButton={verPaginaAnterior}
+                        isDisabled={paginaBusqueda < 2}
+                      />
+                      <SmallButton
+                        textButton={"Ver mas"}
+                        actionButton={verProximaPagina}
+                        isDisabled={paginaBusqueda >= cantidadPaginasBusqueda}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )}
+
+
               </TableBody>
             </Table>
           </TableContainer>

@@ -196,47 +196,47 @@ class OfflineAutoIncrement extends ModelSingleton {
 
       const infoBoletas = this.getByDte(responseData, 39)
       if (infoBoletas) {
-        infoGuardar.nFolioBoleta = infoBoletas.folioActual
-        infoGuardar.nFolioBoletaHasta = infoBoletas.folioHasta
-      }else{
-        infoGuardar.nFolioBoleta = 0
-        infoGuardar.nFolioBoletaHasta = 1000
+        infoGuardar.folioActual = infoBoletas.folioActual
+        infoGuardar.folioHasta = infoBoletas.folioHasta
+      } else {
+        infoGuardar.folioActual = 0
+        infoGuardar.folioHasta = 1000
       }
 
       const infoBoletasExentas = this.getByDte(responseData, 41)
       if (infoBoletasExentas) {
-        infoGuardar.nFolioBoletaExenta = infoBoletasExentas.folioActual
-        infoGuardar.nFolioBoletaExentaHasta = infoBoletasExentas.folioHasta
-      }else{
-        infoGuardar.nFolioBoletaExenta = 0
-        infoGuardar.nFolioBoletaExentaHasta = 1000
+        infoGuardar.folioActual = infoBoletasExentas.folioActual
+        infoGuardar.folioHasta = infoBoletasExentas.folioHasta
+      } else {
+        infoGuardar.folioActual = 0
+        infoGuardar.folioHasta = 1000
       }
 
       const infoFacturas = this.getByDte(responseData, 33)
       if (infoFacturas) {
-        infoGuardar.nFolioFactura = infoFacturas.folioActual
-        infoGuardar.nFolioFacturaHasta = infoFacturas.folioHasta
-      }else{
-        infoGuardar.nFolioFactura = 0
-        infoGuardar.nFolioFacturaHasta = 1000
+        infoGuardar.folioActual = infoFacturas.folioActual
+        infoGuardar.folioHasta = infoFacturas.folioHasta
+      } else {
+        infoGuardar.folioActual = 0
+        infoGuardar.folioHasta = 1000
       }
 
       const infoTickets = this.getByDte(responseData, 0)
       if (infoTickets) {
-        infoGuardar.nFolioTicket = infoTickets.folioActual
-        infoGuardar.nFolioTicketHasta = infoTickets.folioHasta
-      }else{
-        infoGuardar.nFolioTicket = 0
-        infoGuardar.nFolioTicketHasta = 1000
+        infoGuardar.folioActual = infoTickets.folioActual
+        infoGuardar.folioHasta = infoTickets.folioHasta
+      } else {
+        infoGuardar.folioActual = 0
+        infoGuardar.folioHasta = 1000
       }
 
       const infoGuiaDespachos = this.getByDte(responseData, 52)
       if (infoGuiaDespachos) {
-        infoGuardar.nFolioGuiaDespacho = infoGuiaDespachos.folioActual
-        infoGuardar.nFolioGuiaDespachoHasta = infoGuiaDespachos.folioHasta
-      }else{
-        infoGuardar.nFolioGuiaDespacho = 0
-        infoGuardar.nFolioGuiaDespachoHasta = 1000
+        infoGuardar.folioActual = infoGuiaDespachos.folioActual
+        infoGuardar.folioHasta = infoGuiaDespachos.folioHasta
+      } else {
+        infoGuardar.folioActual = 0
+        infoGuardar.folioHasta = 1000
       }
 
       console.log("infoGuardar", infoGuardar)
